@@ -4,6 +4,7 @@ const User = require("../models/User");
 const { optionalAuth, requireAuth } = require("../middleware/auth");
 const { upload, processImage } = require("../middleware/upload");
 
+const uploadToCloudinary = require("../utils/cloudinaryUpload");
 const router = express.Router();
 
 router.use(optionalAuth);
@@ -15,7 +16,7 @@ router.get("/", async (req, res, next) => {
       tag = "",
       sort = "newest",
       page = 1,
-      limit = 6
+      limit = 6,
     } = req.query;
 
     const filter = {};
@@ -23,7 +24,7 @@ router.get("/", async (req, res, next) => {
     if (search.trim()) {
       filter.$or = [
         { content: { $regex: search.trim(), $options: "i" } },
-        { tags: { $regex: search.trim(), $options: "i" } }
+        { tags: { $regex: search.trim(), $options: "i" } },
       ];
     }
 
@@ -46,9 +47,7 @@ router.get("/", async (req, res, next) => {
     }
 
     const total = await Post.countDocuments(filter);
-    const posts = await query
-      .skip((currentPage - 1) * perPage)
-      .limit(perPage);
+    const posts = await query.skip((currentPage - 1) * perPage).limit(perPage);
 
     res.render("index", {
       posts,
@@ -56,7 +55,7 @@ router.get("/", async (req, res, next) => {
       tag,
       sort,
       currentPage,
-      totalPages: Math.ceil(total / perPage)
+      totalPages: Math.ceil(total / perPage),
     });
   } catch (err) {
     next(err);
@@ -67,31 +66,55 @@ router.get("/new", requireAuth, (req, res) => {
   res.render("new", { error: null });
 });
 
-router.post("/", requireAuth, upload.single("image"), processImage, async (req, res, next) => {
-  try {
-    const tags = (req.body.tags || "")
-      .split(",")
-      .map(t => t.trim().toLowerCase())
-      .filter(Boolean)
-      .slice(0, 10);
+router.post(
+  "/",
+  requireAuth,
+  upload.single("image"),
+  processImage,
+  async (req, res, next) => {
+    try {
+      const tags = (req.body.tags || "")
+        .split(",")
+        .map((t) => t.trim().toLowerCase())
+        .filter(Boolean)
+        .slice(0, 10);
 
-    await Post.create({
-      author: req.user._id,
-      content: req.body.content,
-      tags,
-      image: req.file ? `/uploads/${req.file.filename}` : ""
-    });
+      let image = {
+        url: "",
+        publicId: "",
+      };
 
-    res.redirect("/posts");
-  } catch (err) {
-    next(err);
-  }
-});
+      if (req.file) {
+        const result = await uploadToCloudinary(req.file.buffer);
+
+        image.url = result.secure_url;
+        image.publicId = result.public_id;
+      }
+
+      await Post.create({
+        author: req.user._id,
+        content: req.body.content,
+        tags,
+        image,
+      });
+
+      res.redirect("/posts");
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 router.get("/:id", async (req, res, next) => {
   try {
-    const post = await Post.findById(req.params.id).populate("author", "username avatar bio");
-    if (!post) return res.status(404).render("error", { title: "404", message: "Post not found." });
+    const post = await Post.findById(req.params.id).populate(
+      "author",
+      "username avatar bio",
+    );
+    if (!post)
+      return res
+        .status(404)
+        .render("error", { title: "404", message: "Post not found." });
 
     res.render("show", { post });
   } catch (err) {
@@ -101,11 +124,22 @@ router.get("/:id", async (req, res, next) => {
 
 router.get("/:id/edit", requireAuth, async (req, res, next) => {
   try {
-    const post = await Post.findById(req.params.id).populate("author", "username");
-    if (!post) return res.status(404).render("error", { title: "404", message: "Post not found." });
+    const post = await Post.findById(req.params.id).populate(
+      "author",
+      "username",
+    );
+    if (!post)
+      return res
+        .status(404)
+        .render("error", { title: "404", message: "Post not found." });
 
     if (post.author._id.toString() !== req.user._id.toString()) {
-      return res.status(403).render("error", { title: "403", message: "You can edit only your own posts." });
+      return res
+        .status(403)
+        .render("error", {
+          title: "403",
+          message: "You can edit only your own posts.",
+        });
     }
 
     res.render("edit", { post });
@@ -114,29 +148,53 @@ router.get("/:id/edit", requireAuth, async (req, res, next) => {
   }
 });
 
-router.patch("/:id", requireAuth, upload.single("image"), processImage, async (req, res, next) => {
-  try {
-    const post = await Post.findById(req.params.id);
-    if (!post) return res.status(404).send("Post not found.");
+router.patch(
+  "/:id",
+  requireAuth,
+  upload.single("image"),
+  processImage,
+  async (req, res, next) => {
+    try {
+      const post = await Post.findById(req.params.id);
 
-    if (post.author.toString() !== req.user._id.toString()) {
-      return res.status(403).send("You can edit only your own posts.");
+      if (!post) {
+        return res.status(404).send("Post not found.");
+      }
+
+      // Authorization
+      if (post.author.toString() !== req.user._id.toString()) {
+        return res.status(403).send("You can edit only your own posts.");
+      }
+
+      // Update content
+      if (req.body.content) {
+        post.content = req.body.content;
+      }
+
+      // Update tags
+      if (req.body.tags !== undefined) {
+        post.tags = req.body.tags
+          .split(",")
+          .map((t) => t.trim().toLowerCase())
+          .filter(Boolean)
+          .slice(0, 10);
+      }
+
+      // Upload new image
+      if (req.file) {
+        const result = await uploadToCloudinary(req.file.buffer);
+
+        post.image = result.secure_url;
+      }
+
+      await post.save();
+
+      res.redirect(`/posts/${post._id}`);
+    } catch (err) {
+      next(err);
     }
-
-    if (req.body.content) post.content = req.body.content;
-
-    if (req.body.tags !== undefined) {
-      post.tags = req.body.tags.split(",").map(t => t.trim().toLowerCase()).filter(Boolean);
-    }
-
-    if (req.file) post.image = `/uploads/${req.file.filename}`;
-
-    await post.save();
-    res.redirect(`/posts/${post._id}`);
-  } catch (err) {
-    next(err);
-  }
-});
+  },
+);
 
 router.delete("/:id", requireAuth, async (req, res, next) => {
   try {
@@ -159,7 +217,9 @@ router.post("/:id/like", requireAuth, async (req, res, next) => {
     const post = await Post.findById(req.params.id);
     if (!post) return res.status(404).send("Post not found.");
 
-    const alreadyLiked = post.likes.some(id => id.toString() === req.user._id.toString());
+    const alreadyLiked = post.likes.some(
+      (id) => id.toString() === req.user._id.toString(),
+    );
 
     if (!alreadyLiked) {
       post.likes.push(req.user._id);
@@ -170,9 +230,9 @@ router.post("/:id/like", requireAuth, async (req, res, next) => {
           $push: {
             notifications: {
               message: `${req.user.username} liked your post.`,
-              type: "like"
-            }
-          }
+              type: "like",
+            },
+          },
         });
       }
     }
@@ -188,7 +248,9 @@ router.delete("/:id/like", requireAuth, async (req, res, next) => {
     const post = await Post.findById(req.params.id);
     if (!post) return res.status(404).send("Post not found.");
 
-    post.likes = post.likes.filter(id => id.toString() !== req.user._id.toString());
+    post.likes = post.likes.filter(
+      (id) => id.toString() !== req.user._id.toString(),
+    );
     await post.save();
 
     res.redirect(req.get("referer") || "/posts");
@@ -208,7 +270,7 @@ router.post("/:id/comments", requireAuth, async (req, res, next) => {
     post.comments.push({
       username: req.user.username,
       user: req.user._id,
-      text
+      text,
     });
 
     await post.save();
@@ -218,9 +280,9 @@ router.post("/:id/comments", requireAuth, async (req, res, next) => {
         $push: {
           notifications: {
             message: `${req.user.username} commented on your post.`,
-            type: "comment"
-          }
-        }
+            type: "comment",
+          },
+        },
       });
     }
 
@@ -230,29 +292,33 @@ router.post("/:id/comments", requireAuth, async (req, res, next) => {
   }
 });
 
-router.delete("/:id/comments/:commentId", requireAuth, async (req, res, next) => {
-  try {
-    const post = await Post.findById(req.params.id);
-    if (!post) return res.status(404).send("Post not found.");
+router.delete(
+  "/:id/comments/:commentId",
+  requireAuth,
+  async (req, res, next) => {
+    try {
+      const post = await Post.findById(req.params.id);
+      if (!post) return res.status(404).send("Post not found.");
 
-    const comment = post.comments.id(req.params.commentId);
-    if (!comment) return res.status(404).send("Comment not found.");
+      const comment = post.comments.id(req.params.commentId);
+      if (!comment) return res.status(404).send("Comment not found.");
 
-    if (
-      comment.user.toString() !== req.user._id.toString() &&
-      post.author.toString() !== req.user._id.toString()
-    ) {
-      return res.status(403).send("You cannot delete this comment.");
+      if (
+        comment.user.toString() !== req.user._id.toString() &&
+        post.author.toString() !== req.user._id.toString()
+      ) {
+        return res.status(403).send("You cannot delete this comment.");
+      }
+
+      comment.deleteOne();
+      await post.save();
+
+      res.redirect(`/posts/${post._id}`);
+    } catch (err) {
+      next(err);
     }
-
-    comment.deleteOne();
-    await post.save();
-
-    res.redirect(`/posts/${post._id}`);
-  } catch (err) {
-    next(err);
-  }
-});
+  },
+);
 
 router.patch("/:id/pin", requireAuth, async (req, res, next) => {
   try {
