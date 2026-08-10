@@ -1,0 +1,27 @@
+<%- include("partials/header", { title: "Edit Post" }) %>
+
+<main class="container form-page">
+  <div class="form-card">
+    <h2 class="text-center mb-4">Edit Your Post ✏️</h2>
+
+    <p><strong>Author:</strong> @<%= post.author.username %></p>
+
+    <form method="POST" action="/posts/<%= post._id %>?_method=PATCH" enctype="multipart/form-data">
+      <label class="form-label">Content</label>
+      <textarea class="form-control mb-3" name="content" rows="8" required><%= post.content %></textarea>
+
+      <label class="form-label">Tags</label>
+      <input class="form-control mb-3" name="tags" value="<%= post.tags.join(', ') %>">
+
+      <label class="form-label">Replace Image</label>
+      <input class="form-control mb-4" type="file" name="image" accept="image/*">
+
+      <div class="d-flex justify-content-between">
+        <a href="/posts/<%= post._id %>" class="btn btn-outline-maroon">← Cancel</a>
+        <button class="btn btn-maroon">Update Post ✓</button>
+      </div>
+    </form>
+  </div>
+</main>
+
+<%- include("partials/footer") %>

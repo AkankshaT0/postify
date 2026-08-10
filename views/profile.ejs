@@ -1,0 +1,44 @@
+<%- include("partials/header", { title: "Profile" }) %>
+
+<main class="container my-5">
+  <div class="profile-card text-center">
+    <div class="avatar"><%= user.username.charAt(0).toUpperCase() %></div>
+    <h2>@<%= user.username %></h2>
+    <p><%= user.bio %></p>
+    <div class="row justify-content-center g-3 my-3">
+      <div class="col-4"><strong><%= posts.length %></strong><br>Posts</div>
+      <div class="col-4"><strong><%= user.followers.length %></strong><br>Followers</div>
+      <div class="col-4"><strong><%= user.following.length %></strong><br>Following</div>
+    </div>
+
+    <% if (currentUser && currentUser._id.toString() !== user._id.toString()) { %>
+      <% if (isFollowing) { %>
+        <form method="POST" action="/users/<%= user.username %>/follow?_method=DELETE">
+          <button class="btn btn-outline-maroon">Unfollow</button>
+        </form>
+      <% } else { %>
+        <form method="POST" action="/users/<%= user.username %>/follow?_method=PATCH">
+          <button class="btn btn-maroon">Follow</button>
+        </form>
+      <% } %>
+    <% } %>
+  </div>
+
+  <h3 class="mt-5 mb-3">Posts by @<%= user.username %></h3>
+
+  <div class="row g-4">
+    <% posts.forEach(post => { %>
+      <div class="col-md-6 col-lg-4">
+        <div class="card post-card h-100">
+          <div class="card-body">
+            <p><%= post.content %></p>
+            <div class="small text-muted">❤️ <%= post.likes.length %> • 💬 <%= post.comments.length %></div>
+            <a href="/posts/<%= post._id %>" class="btn btn-outline-maroon btn-sm mt-3">View</a>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+</main>
+
+<%- include("partials/footer") %>

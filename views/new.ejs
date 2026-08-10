@@ -1,0 +1,30 @@
+<%- include("partials/header", { title: "Create Post" }) %>
+
+<main class="container form-page">
+  <div class="form-card">
+    <div class="text-center mb-4">
+      <h1>Create New Post ✨</h1>
+      <p>Share your thoughts with the community.</p>
+    </div>
+
+    <% if (error) { %><div class="alert alert-danger"><%= error %></div><% } %>
+
+    <form action="/posts" method="POST" enctype="multipart/form-data">
+      <label class="form-label">Content</label>
+      <textarea class="form-control mb-3" name="content" rows="7" maxlength="2000" placeholder="What's on your mind?" required></textarea>
+
+      <label class="form-label">Tags</label>
+      <input class="form-control mb-3" name="tags" placeholder="javascript, express, backend">
+
+      <label class="form-label">Image</label>
+      <input class="form-control mb-4" type="file" name="image" accept="image/*">
+
+      <div class="d-flex justify-content-between">
+        <a href="/posts" class="btn btn-outline-maroon">← Back</a>
+        <button class="btn btn-maroon">Publish Post 🚀</button>
+      </div>
+    </form>
+  </div>
+</main>
+
+<%- include("partials/footer") %>

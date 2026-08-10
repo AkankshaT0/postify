@@ -1,0 +1,117 @@
+<%- include("partials/header", { title: "Posts" }) %>
+
+<section class="hero">
+  <div class="container text-center">
+    <h1>Discover Amazing Posts</h1>
+    <p class="lead">Share. Connect. Express.</p>
+    <% if (currentUser) { %>
+      <a href="/posts/new" class="btn btn-light btn-lg">+ Create New Post</a>
+    <% } else { %>
+      <a href="/register" class="btn btn-light btn-lg">Join Postify</a>
+    <% } %>
+  </div>
+</section>
+
+<main class="container my-5">
+  <form class="card filter-card p-3 mb-4" method="GET" action="/posts">
+    <div class="row g-2">
+      <div class="col-md-5">
+        <input class="form-control" name="search" value="<%= search %>" placeholder="🔍 Search posts or tags">
+      </div>
+      <div class="col-md-3">
+        <input class="form-control" name="tag" value="<%= tag %>" placeholder="#javascript">
+      </div>
+      <div class="col-md-2">
+        <select class="form-select" name="sort">
+          <option value="newest" <%= sort === "newest" ? "selected" : "" %>>Newest</option>
+          <option value="oldest" <%= sort === "oldest" ? "selected" : "" %>>Oldest</option>
+          <option value="popular" <%= sort === "popular" ? "selected" : "" %>>Popular</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-maroon w-100">Apply</button>
+      </div>
+    </div>
+  </form>
+
+  <div class="row g-4">
+    <% if (!posts.length) { %>
+      <div class="col-12">
+        <div class="empty-box text-center">
+          <h3>No posts found</h3>
+          <p>Try another search or create a new post.</p>
+        </div>
+      </div>
+    <% } %>
+
+    <% posts.forEach(post => { %>
+      <div class="col-md-6 col-lg-4">
+        <article class="card post-card h-100">
+          <div class="card-body p-4">
+            <% if (post.pinned) { %><span class="badge badge-maroon mb-2">📌 Pinned</span><% } %>
+            <h5>
+              <a class="username-link" href="/users/<%= post.author.username %>">
+                @<%= post.author.username %>
+              </a>
+            </h5>
+
+            <% if (post.image) { %>
+              <img src="<%= post.image %>" class="post-image mb-3" alt="Post image">
+            <% } %>
+
+            <p class="post-content"><%= post.content %></p>
+
+            <div class="mb-3">
+              <% post.tags.forEach(tagItem => { %>
+                <a class="tag" href="/posts?tag=<%= tagItem %>">#<%= tagItem %></a>
+              <% }) %>
+            </div>
+
+            <div class="d-flex justify-content-between small text-muted mb-3">
+              <span>❤️ <%= post.likes.length %></span>
+              <span>💬 <%= post.comments.length %></span>
+            </div>
+
+            <div class="d-flex gap-2 flex-wrap">
+              <a href="/posts/<%= post._id %>" class="btn btn-outline-maroon btn-sm">View</a>
+
+              <% if (currentUser) { %>
+                <% const liked = post.likes.some(id => id.toString() === currentUser._id.toString()); %>
+                <% if (liked) { %>
+                  <form method="POST" action="/posts/<%= post._id %>/like?_method=DELETE">
+                    <button class="btn btn-sm btn-delete">💔 Unlike</button>
+                  </form>
+                <% } else { %>
+                  <form method="POST" action="/posts/<%= post._id %>/like">
+                    <button class="btn btn-sm btn-like">❤️ Like</button>
+                  </form>
+                <% } %>
+
+                <% if (post.author._id.toString() === currentUser._id.toString()) { %>
+                  <a href="/posts/<%= post._id %>/edit" class="btn btn-maroon btn-sm">Edit</a>
+                  <form method="POST" action="/posts/<%= post._id %>?_method=DELETE">
+                    <button class="btn btn-delete btn-sm" onclick="return confirm('Delete this post?')">Delete</button>
+                  </form>
+                <% } %>
+              <% } %>
+            </div>
+          </div>
+        </article>
+      </div>
+    <% }) %>
+  </div>
+
+  <% if (totalPages > 1) { %>
+    <nav class="mt-5">
+      <ul class="pagination justify-content-center">
+        <% for (let i = 1; i <= totalPages; i++) { %>
+          <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+            <a class="page-link" href="/posts?page=<%= i %>&search=<%= encodeURIComponent(search) %>&tag=<%= encodeURIComponent(tag) %>&sort=<%= sort %>"><%= i %></a>
+          </li>
+        <% } %>
+      </ul>
+    </nav>
+  <% } %>
+</main>
+
+<%- include("partials/footer") %>

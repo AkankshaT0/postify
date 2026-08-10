@@ -1,0 +1,249 @@
+:root {
+  --maroon-dark: #3d0912;
+  --maroon: #5a0f1b;
+  --maroon-main: #7b1e2b;
+  --maroon-light: #8f3a45;
+  --cream: #f8f1ed;
+}
+
+body {
+  background: var(--cream);
+  color: #4b3030;
+  font-family: Arial, sans-serif;
+  transition: .25s ease;
+}
+
+.navbar-custom {
+  background: var(--maroon);
+}
+
+.hero {
+  background: linear-gradient(135deg, #5a0f1b, #7b1e2b, #8f3a45);
+  color: white;
+  padding: 70px 20px;
+  border-radius: 0 0 35px 35px;
+}
+
+.btn-maroon {
+  background: var(--maroon-main);
+  border-color: var(--maroon-main);
+  color: white;
+}
+
+.btn-maroon:hover {
+  background: var(--maroon);
+  border-color: var(--maroon);
+  color: white;
+}
+
+.btn-outline-maroon {
+  color: var(--maroon-main);
+  border: 1px solid var(--maroon-main);
+}
+
+.btn-outline-maroon:hover {
+  background: var(--maroon-main);
+  color: white;
+}
+
+.btn-like {
+  background: #fff;
+  color: var(--maroon-main);
+  border: 1px solid #d8b9b9;
+}
+
+.btn-delete {
+  color: #9b2638;
+  border: 1px solid #9b2638;
+  background: white;
+}
+
+.btn-delete:hover {
+  background: #9b2638;
+  color: white;
+}
+
+.post-card,
+.form-card,
+.auth-card,
+.post-detail,
+.profile-card,
+.stat-card,
+.filter-card,
+.empty-box {
+  background: white;
+  border: none;
+  border-radius: 18px;
+  box-shadow: 0 8px 25px rgba(90, 15, 27, .12);
+}
+
+.post-card {
+  border-left: 5px solid var(--maroon-main);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.post-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(90, 15, 27, .18);
+}
+
+.post-content {
+  line-height: 1.7;
+}
+
+.username-link {
+  color: var(--maroon-main);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.tag {
+  display: inline-block;
+  margin: 2px 4px 2px 0;
+  padding: 4px 9px;
+  border-radius: 20px;
+  background: #f2dfe0;
+  color: var(--maroon-main);
+  text-decoration: none;
+  font-size: .85rem;
+}
+
+.badge-maroon {
+  background: var(--maroon-main);
+}
+
+.post-image,
+.detail-image {
+  width: 100%;
+  max-height: 400px;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+.form-page,
+.auth-page {
+  max-width: 800px;
+  margin: 60px auto;
+}
+
+.form-card,
+.auth-card,
+.post-detail {
+  padding: 40px;
+  border-top: 6px solid var(--maroon-main);
+}
+
+.form-control,
+.form-select {
+  border-radius: 11px;
+  border-color: #d8b9b9;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--maroon-main);
+  box-shadow: 0 0 0 .2rem rgba(123, 30, 43, .12);
+}
+
+.comment {
+  background: #fff8f6;
+  border-left: 4px solid #b26a73;
+  padding: 12px 15px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+}
+
+.profile-card {
+  max-width: 700px;
+  margin: auto;
+  padding: 40px;
+}
+
+.avatar {
+  width: 85px;
+  height: 85px;
+  border-radius: 50%;
+  margin: 0 auto 15px;
+  display: grid;
+  place-items: center;
+  background: var(--maroon-main);
+  color: white;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.stat-card {
+  padding: 25px;
+  text-align: center;
+  border-top: 4px solid var(--maroon-main);
+}
+
+.notification {
+  padding: 18px;
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 15px rgba(90, 15, 27, .08);
+}
+
+.notification.unread {
+  border-left: 5px solid var(--maroon-main);
+}
+
+.empty-box {
+  padding: 50px;
+}
+
+.footer {
+  background: var(--maroon-dark);
+  color: #e8ceca;
+  padding: 25px;
+}
+
+/* Dark mode */
+body.dark-mode {
+  background: #17090c;
+  color: #f2dddd;
+}
+
+body.dark-mode .card,
+body.dark-mode .form-card,
+body.dark-mode .auth-card,
+body.dark-mode .post-detail,
+body.dark-mode .profile-card,
+body.dark-mode .stat-card,
+body.dark-mode .filter-card,
+body.dark-mode .empty-box,
+body.dark-mode .notification {
+  background: #281317;
+  color: #f2dddd;
+}
+
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+  background: #1e0d10;
+  color: #f2dddd;
+  border-color: #63323a;
+}
+
+body.dark-mode .comment {
+  background: #34191e;
+}
+
+body.dark-mode .btn-like,
+body.dark-mode .btn-delete {
+  background: #281317;
+  color: #f2dddd;
+}
+
+@media (max-width: 576px) {
+  .hero h1 {
+    font-size: 2.1rem;
+  }
+
+  .form-card,
+  .auth-card,
+  .post-detail {
+    padding: 25px;
+  }
+}

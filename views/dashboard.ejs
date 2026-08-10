@@ -1,0 +1,24 @@
+<%- include("partials/header", { title: "Dashboard" }) %>
+
+<main class="container my-5">
+  <h1 class="mb-4">Dashboard 👋</h1>
+
+  <div class="row g-4">
+    <div class="col-md-3"><div class="stat-card"><h2><%= postCount %></h2><p>Posts</p></div></div>
+    <div class="col-md-3"><div class="stat-card"><h2><%= likedPosts %></h2><p>Posts Liked</p></div></div>
+    <div class="col-md-3"><div class="stat-card"><h2><%= commentCount %></h2><p>Comments</p></div></div>
+    <div class="col-md-3"><div class="stat-card"><h2><%= followers %></h2><p>Followers</p></div></div>
+  </div>
+
+  <div class="card mt-5 p-4">
+    <h4>Recent Posts</h4>
+    <% posts.forEach(post => { %>
+      <div class="border-bottom py-3">
+        <p class="mb-1"><%= post.content %></p>
+        <small>❤️ <%= post.likes.length %> • 💬 <%= post.comments.length %></small>
+      </div>
+    <% }) %>
+  </div>
+</main>
+
+<%- include("partials/footer") %>

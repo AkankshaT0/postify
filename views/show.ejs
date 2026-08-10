@@ -1,0 +1,77 @@
+<%- include("partials/header", { title: "Post Details" }) %>
+
+<main class="container post-detail-page">
+  <article class="post-detail">
+    <% if (post.pinned) { %><span class="badge badge-maroon mb-2">📌 Pinned</span><% } %>
+
+    <h2><a class="username-link" href="/users/<%= post.author.username %>">@<%= post.author.username %></a></h2>
+
+    <small class="text-muted"><%= post.createdAt.toLocaleString() %></small>
+
+    <% if (post.image) { %>
+      <img src="<%= post.image %>" class="detail-image my-3" alt="Post image">
+    <% } %>
+
+    <p class="post-content fs-5"><%= post.content %></p>
+
+    <div class="mb-3">
+      <% post.tags.forEach(tag => { %>
+        <a class="tag" href="/posts?tag=<%= tag %>">#<%= tag %></a>
+      <% }) %>
+    </div>
+
+    <div class="stats mb-4">
+      ❤️ <%= post.likes.length %> &nbsp;&nbsp; 💬 <%= post.comments.length %>
+    </div>
+
+    <% if (currentUser) { %>
+      <% const liked = post.likes.some(id => id.toString() === currentUser._id.toString()); %>
+      <% if (liked) { %>
+        <form class="d-inline" method="POST" action="/posts/<%= post._id %>/like?_method=DELETE">
+          <button class="btn btn-delete">💔 Unlike</button>
+        </form>
+      <% } else { %>
+        <form class="d-inline" method="POST" action="/posts/<%= post._id %>/like">
+          <button class="btn btn-like">❤️ Like</button>
+        </form>
+      <% } %>
+
+      <% if (post.author._id.toString() === currentUser._id.toString()) { %>
+        <a href="/posts/<%= post._id %>/edit" class="btn btn-maroon">Edit</a>
+        <form class="d-inline" method="POST" action="/posts/<%= post._id %>?_method=DELETE">
+          <button class="btn btn-delete" onclick="return confirm('Delete this post?')">Delete</button>
+        </form>
+        <form class="d-inline" method="POST" action="/posts/<%= post._id %>/pin?_method=PATCH">
+          <button class="btn btn-outline-maroon"><%= post.pinned ? "Unpin" : "📌 Pin" %></button>
+        </form>
+      <% } %>
+    <% } %>
+
+    <hr class="my-4">
+
+    <h4>Comments</h4>
+
+    <% if (currentUser) { %>
+      <form method="POST" action="/posts/<%= post._id %>/comments" class="mb-4">
+        <textarea class="form-control mb-2" name="text" maxlength="500" placeholder="Write a comment..." required></textarea>
+        <button class="btn btn-maroon">Comment</button>
+      </form>
+    <% } else { %>
+      <p><a href="/login">Login</a> to like and comment.</p>
+    <% } %>
+
+    <% post.comments.slice().reverse().forEach(comment => { %>
+      <div class="comment">
+        <strong>@<%= comment.username %></strong>
+        <p class="mb-1"><%= comment.text %></p>
+        <% if (currentUser && (comment.user.toString() === currentUser._id.toString() || post.author._id.toString() === currentUser._id.toString())) { %>
+          <form method="POST" action="/posts/<%= post._id %>/comments/<%= comment._id %>?_method=DELETE">
+            <button class="btn btn-link btn-sm text-danger p-0">Delete</button>
+          </form>
+        <% } %>
+      </div>
+    <% }) %>
+  </article>
+</main>
+
+<%- include("partials/footer") %>
